@@ -4,6 +4,31 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Version>0.9.0</Version>
+	  
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Marada.Utils</Title>
+    <Authors>Mads Mikkel Rasmussen</Authors>
+    <Company>Marada Tech.</Company>
+    <Product>Marada.Utils</Product>
+    <Description>Utilities by Marada Tech.</Description>
+    <Copyright>© 2023 Marada Tech. All rights reserved.</Copyright>
+    <PackAsTool>True</PackAsTool>
+    <ToolCommandName>mrd</ToolCommandName>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <PackageReleaseNotes>init release</PackageReleaseNotes>
+    <PackageTags>Random</PackageTags>
+    <RepositoryUrl>https://github.com/mads-mikkel/Marada</RepositoryUrl>
+    <AssemblyName>Marada.$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>Marada.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <PackageReadmeFile>nugetreadme.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="nugetreadme.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
