@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Marada.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "template MySystem --backend \"MyDb\""
+    }
+  }
+}
