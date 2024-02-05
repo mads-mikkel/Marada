@@ -23,15 +23,9 @@
         }
 
         public static bool EndIsAfterStart(DateTime start, DateTime end)
-            => (end > start);
+            => end > start;
 
         public static implicit operator TimeSpan(DateTimeSpan dateTimeSpan) => dateTimeSpan.duration;
         public static implicit operator (DateTime start, DateTime end)(DateTimeSpan dateTimeSpan) => (dateTimeSpan.start, dateTimeSpan.end);
-
-        void M()
-        {
-            int i = 2;
-            Thrower.Throw<ArgumentOutOfRangeException>(() => i < 0, "Value is less than zero");
-        }
     }
 }

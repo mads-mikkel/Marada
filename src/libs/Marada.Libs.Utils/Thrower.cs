@@ -12,7 +12,7 @@ namespace Marada.Libs.Utils
         {
             bool result = test.Invoke();
             var e = new Exception(message);
-            var x = (E)e;
+            E x = (E)e;
             if(result) throw x;
         }
     }
