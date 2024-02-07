@@ -114,6 +114,12 @@ partial class CliEntry
         result = backendTemplateCreator.BuildProjects();
         OutputResult(result);
 
+        Display($"Installing EF NuGets...", startNewLine: true);
+        result = backendTemplateCreator.InstallDesignNuget();
+        OutputResult(result);
+        result = backendTemplateCreator.InstallSqlServerNuget();
+        OutputResult(result);
+
         string c = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Northwind;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
         Display($"Running EF...", startNewLine: true);
         result = backendTemplateCreator.RunEf(c);
@@ -137,7 +143,7 @@ internal class BackendTemplateCreator
 {
     private readonly string rootPath;
     private readonly string backendName;
-    private readonly List<string> paths = new();
+    //private readonly List<string> paths = new();
     private readonly Dictionary<string, string> projectsPaths = new();
 
     public BackendTemplateCreator(string rootPath, string backendName)
@@ -191,7 +197,7 @@ internal class BackendTemplateCreator
             projectsPaths.Add("Dto", Path.Combine(rootPath, @"src\Application\Dto"));
             projectsPaths.Add("Domain", Path.Combine(rootPath, @"src\Domain"));
             projectsPaths.Add("tmp", Path.Combine(rootPath, @"src\tmp"));
-            foreach(var path in paths)
+            foreach(var path in projectsPaths.Values)
             {
                 Directory.CreateDirectory(path);
             }
@@ -225,6 +231,21 @@ internal class BackendTemplateCreator
         result = BuildProject(projectsPaths["Dto"]);
         result = BuildProject(projectsPaths["tmp"]);
         return ("All projects successfully builded", true);
+    }
+
+    public (string, bool) InstallDesignNuget()
+    {
+        string command = $"add {projectsPaths["tmp"]}\\{backendName}.temprunner.csproj package Microsoft.EntityFrameworkCore.Design";
+        (string m, bool success) = ExecuteDotnet(command);
+        return (m, success);
+    }
+
+    public (string, bool) InstallSqlServerNuget()
+    {
+        // {projectsPaths["EfContexts"]}\\{backendName}.Infrastructure.EfContexts.csproj
+        string command = $"add {projectsPaths["tmp"]}\\{backendName}.temprunner.csproj package Microsoft.EntityFrameworkCore.SqlServer";
+        (string m, bool success) = ExecuteDotnet(command);
+        return (m, success);
     }
 
     public (string, bool) RunEf(string connectionString)
