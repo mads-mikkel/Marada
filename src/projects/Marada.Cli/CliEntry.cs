@@ -91,7 +91,7 @@ partial class CliEntry
 
     internal static void ExecuteBackendCommand(string backendName, string dbconn)
     {
-        string rootPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), @$"source\repos\sandbox\clitest\{backendName}");
+        string rootPath = @$"C:\temp\{backendName}";    //Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), @$"source\repos\sandbox\clitest\{backendName}");
         BackendTemplateCreator backendTemplateCreator = new(rootPath, backendName);
 
         Display("Checking for installed software: dotnet, git... ", startNewLine: true);
@@ -108,6 +108,15 @@ partial class CliEntry
 
         Display($"Creating projects in {rootPath}\\src... ", startNewLine: true);
         result = backendTemplateCreator.CreateProjects();
+        OutputResult(result);
+
+        Display($"Building projects in {rootPath}\\src... ", startNewLine: true);
+        result = backendTemplateCreator.BuildProjects();
+        OutputResult(result);
+
+        string c = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Northwind;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+        Display($"Running EF...", startNewLine: true);
+        result = backendTemplateCreator.RunEf(c);
         OutputResult(result);
     }
 
@@ -128,6 +137,8 @@ internal class BackendTemplateCreator
 {
     private readonly string rootPath;
     private readonly string backendName;
+    private readonly List<string> paths = new();
+    private readonly Dictionary<string, string> projectsPaths = new();
 
     public BackendTemplateCreator(string rootPath, string backendName)
     {
@@ -170,15 +181,20 @@ internal class BackendTemplateCreator
     {
         try
         {
-            Directory.CreateDirectory(Path.Combine(rootPath, "src"));
-            Directory.CreateDirectory(Path.Combine(rootPath, "docs"));
-            Directory.CreateDirectory(Path.Combine(rootPath, @"src\Infrastructure"));
-            Directory.CreateDirectory(Path.Combine(rootPath, @"src\Infrastructure\EfContexts"));
-            Directory.CreateDirectory(Path.Combine(rootPath, @"src\Infrastructure\DataAccess"));
-            Directory.CreateDirectory(Path.Combine(rootPath, @"src\Presentation"));
-            Directory.CreateDirectory(Path.Combine(rootPath, @"src\Application"));
-            Directory.CreateDirectory(Path.Combine(rootPath, @"src\Application\Dto"));
-            Directory.CreateDirectory(Path.Combine(rootPath, @"src\Domain"));
+            projectsPaths.Add("srcFolder", Path.Combine(rootPath, "src"));
+            projectsPaths.Add("docsFolder", Path.Combine(rootPath, "docs"));
+            projectsPaths.Add("Infrastructure", Path.Combine(rootPath, @"src\Infrastructure"));
+            projectsPaths.Add("EfContexts", Path.Combine(rootPath, @"src\Infrastructure\EfContexts"));
+            projectsPaths.Add("DataAccess", Path.Combine(rootPath, @"src\Infrastructure\DataAccess"));
+            projectsPaths.Add("Presentation", Path.Combine(rootPath, @"src\Presentation"));
+            projectsPaths.Add("Application", Path.Combine(rootPath, @"src\Application"));
+            projectsPaths.Add("Dto", Path.Combine(rootPath, @"src\Application\Dto"));
+            projectsPaths.Add("Domain", Path.Combine(rootPath, @"src\Domain"));
+            projectsPaths.Add("tmp", Path.Combine(rootPath, @"src\tmp"));
+            foreach(var path in paths)
+            {
+                Directory.CreateDirectory(path);
+            }
         }
         catch(Exception e)
         {
@@ -195,83 +211,50 @@ internal class BackendTemplateCreator
 
     public (string, bool) CreateProjects()
     {
-        string projectName = $"{backendName}.Infrastructure.EfContexts";
-        string srcFolder = Path.Combine(rootPath, "src");
-        string dir = Path.Combine(srcFolder, "Infrastructure\\EfContexts");
-        (string m, bool success) result = new();
-        string trace = "";
+        (string m, bool success) result = CreateProject(projectsPaths["EfContexts"], $"{backendName}.Infrastructure.EfContexts", "classlib");
+        result = CreateProject(projectsPaths["DataAccess"], $"{backendName}.Infrastructure.DataAccess", "classlib");
+        result = CreateProject(projectsPaths["Dto"], $"{backendName}.Application.Dto", "classlib");
+        result = CreateProject(projectsPaths["tmp"], $"{backendName}.temprunner", "console");
+        return ("All projects created successfully", true);
+    }
 
-        string command = $"new classlib -n {projectName} -o {dir} --force";
-        result = ExecuteDotnet(command);
-        trace += result.m + Environment.NewLine;
-        if(!result.success) return result;
+    public (string, bool) BuildProjects()
+    {
+        (string m, bool success) result = BuildProject(projectsPaths["EfContexts"]);
+        result = BuildProject(projectsPaths["DataAccess"]);
+        result = BuildProject(projectsPaths["Dto"]);
+        result = BuildProject(projectsPaths["tmp"]);
+        return ("All projects successfully builded", true);
+    }
 
-        command = $"build {dir}";
-        result = ExecuteDotnet(command);
-        trace += result.m + Environment.NewLine;
-        if(!result.success) return result;
-
-        projectName = $"{backendName}.Infrastructure.DataAccess";
-        dir = Path.Combine(srcFolder, "Infrastructure\\DataAccess");
-        command = $"new classlib -n {projectName} -o {dir} --force";
-        result = ExecuteDotnet(command);
-        trace += result.m + Environment.NewLine;
-        if(!result.success) return result;
-
-        command = $"build {dir}";
-        result = ExecuteDotnet(command);
-        trace += result.m + Environment.NewLine;
-        if(!result.success) return result;
-
-        projectName = $"{backendName}.Application.Dto";
-        dir = Path.Combine(srcFolder, "Application\\Dto");
-        command = $"new classlib -n {projectName} -o {dir} --force";
-        result = ExecuteDotnet(command);
-        trace += result.m + Environment.NewLine;
-        if(!result.success) return result;
-
-        command = $"build {dir}";
-        result = ExecuteDotnet(command);
-        trace += result.m + Environment.NewLine;
-        if(!result.success) return result;
-
-        command = $"new classlib -n {projectName} -o {dir} --force";
-        result = ExecuteDotnet(command);
-        trace += result.m + Environment.NewLine;
-        if(!result.success) return result;
-
-        command = $"build {dir}";
-        result = ExecuteDotnet(command);
-        trace += result.m + Environment.NewLine;
-        if(!result.success) return result;
-
-        command = $"new console -n {backendName}.temprunner -o {srcFolder} --force";
-        result = ExecuteDotnet(command);
-        trace += result.m + Environment.NewLine;
-        if(!result.success) return result;
-
-        command = $"build {dir}";
-        result = ExecuteDotnet(command);
-        trace += result.m + Environment.NewLine;
-        if(!result.success) return result;
-
-        command = $"ef dbcontext scaffold \"Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Northwind;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False\" " +
-            $"Microsoft.EntityFrameworkCore.SqlServer " +
+    public (string, bool) RunEf(string connectionString)
+    {
+        string command = $"ef dbcontext scaffold \"{connectionString}\" Microsoft.EntityFrameworkCore.SqlServer " +
             "-v " +
-            $"-c " + backendName + "Context " +
-            "--context-dir Infrastructure/EfContexts " +
-            $"-o Application/Dto " +
-            $"-p \"{Path.Combine(srcFolder, "Application\\Dto\\")}" + $"{backendName}" + ".Application.Dto.csproj\" " +
-            "-s " + backendName + ".temprunner ";
-        result = ExecuteDotnet(command);
-        trace += result.m + Environment.NewLine;
-        if(!result.success) return result;
+            $"-c {backendName}Context " +
+            $"--context-dir {projectsPaths["EfContexts"]} " +
+            $"-o {projectsPaths["Dto"]} " +
+            $"-p {projectsPaths["tmp"]} " +
+            $"-s {projectsPaths["tmp"]}\\{backendName}.temprunner.csproj ";
+        (string m, bool success) = ExecuteDotnet(command);
 
-        //command = $"new classlib -n {backendName}.Application.Dto -o {Path.Combine(srcFolder, "Application\\Dto")} --force";
-        //result = ExecuteDotnet(command);
-        //if(!result.success) return result;
+        return (m, success);
+    }
 
-        return (trace, true);
+    private (string, bool) CreateProject(string fullpath, string name, string type)
+    {
+        string command = $"new {type} -n {name} -o {fullpath} --force";
+        (string m, bool success) result = ExecuteDotnet(command);
+        string trace = result.m + Environment.NewLine;
+        return result;
+    }
+
+    private (string, bool) BuildProject(string fullPath)
+    {
+        string command = $"build {fullPath}";
+        (string m, bool success) result = ExecuteDotnet(command);
+        string trace = result.m + Environment.NewLine;
+        return result;
     }
 
     private (string, bool) ExecuteDotnet(string argument)
