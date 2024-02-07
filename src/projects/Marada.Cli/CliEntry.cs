@@ -110,6 +110,10 @@ partial class CliEntry
         result = backendTemplateCreator.CreateProjects();
         OutputResult(result);
 
+        Display($"Adding project references...", startNewLine: true);
+        result = backendTemplateCreator.AddReferences();
+        OutputResult(result);
+
         Display($"Building projects in {rootPath}\\src... ", startNewLine: true);
         result = backendTemplateCreator.BuildProjects();
         OutputResult(result);
@@ -144,7 +148,10 @@ internal class BackendTemplateCreator
     private readonly string rootPath;
     private readonly string backendName;
     //private readonly List<string> paths = new();
-    private readonly Dictionary<string, string> projectsPaths = new();
+    private readonly Dictionary<string, string> projectsDirectories = new();
+    private readonly Dictionary<string, string> projectsNames = new();
+    private readonly Dictionary<string, string> fullProjectPaths = new();
+    private readonly Dictionary<string, string> fullProjectNamesRelativeFromSrc = new();
 
     public BackendTemplateCreator(string rootPath, string backendName)
     {
@@ -187,20 +194,34 @@ internal class BackendTemplateCreator
     {
         try
         {
-            projectsPaths.Add("srcFolder", Path.Combine(rootPath, "src"));
-            projectsPaths.Add("docsFolder", Path.Combine(rootPath, "docs"));
-            projectsPaths.Add("Infrastructure", Path.Combine(rootPath, @"src\Infrastructure"));
-            projectsPaths.Add("EfContexts", Path.Combine(rootPath, @"src\Infrastructure\EfContexts"));
-            projectsPaths.Add("DataAccess", Path.Combine(rootPath, @"src\Infrastructure\DataAccess"));
-            projectsPaths.Add("Presentation", Path.Combine(rootPath, @"src\Presentation"));
-            projectsPaths.Add("Application", Path.Combine(rootPath, @"src\Application"));
-            projectsPaths.Add("Dto", Path.Combine(rootPath, @"src\Application\Dto"));
-            projectsPaths.Add("Domain", Path.Combine(rootPath, @"src\Domain"));
-            projectsPaths.Add("tmp", Path.Combine(rootPath, @"src\tmp"));
-            foreach(var path in projectsPaths.Values)
+            projectsDirectories.Add("srcFolder", Path.Combine(rootPath, "src"));
+            projectsDirectories.Add("docsFolder", Path.Combine(rootPath, "docs"));
+            projectsDirectories.Add("Infrastructure", Path.Combine(rootPath, @"src\Infrastructure"));
+            projectsDirectories.Add("EfContexts", Path.Combine(rootPath, @"src\Infrastructure\EfContexts"));
+            projectsDirectories.Add("DataAccess", Path.Combine(rootPath, @"src\Infrastructure\DataAccess"));
+            projectsDirectories.Add("Presentation", Path.Combine(rootPath, @"src\Presentation"));
+            projectsDirectories.Add("Application", Path.Combine(rootPath, @"src\Application"));
+            projectsDirectories.Add("Dto", Path.Combine(rootPath, @"src\Application\Dto"));
+            projectsDirectories.Add("Domain", Path.Combine(rootPath, @"src\Domain"));
+            projectsDirectories.Add("tmp", Path.Combine(rootPath, @"src\tmp"));
+            foreach(var path in projectsDirectories.Values)
             {
                 Directory.CreateDirectory(path);
             }
+
+            projectsNames.Add("EfContexts", $"{backendName}.Infrastructure.EfContexts");
+            projectsNames.Add("DataAccess", $"{backendName}.Infrastructure.DataAccess");
+            projectsNames.Add("Dto", $"{backendName}.Application.Dto");
+            projectsNames.Add("tmp", $"{backendName}.temprunner");
+
+            fullProjectNamesRelativeFromSrc.Add("EfContexts", Path.Combine("Infrastructure", $"{projectsNames["EfContexts"]}" + ".csproj"));
+            fullProjectNamesRelativeFromSrc.Add("DataAccess", Path.Combine("Infrastructure", $"{projectsNames["DataAccess"]}" + ".csproj"));
+            fullProjectNamesRelativeFromSrc.Add("Dto", Path.Combine("Application\\Dto", $"{projectsNames["Dto"]}" + ".csproj"));
+
+            fullProjectPaths.Add("EfContexts", Path.Combine(projectsDirectories["EfContexts"], projectsNames["EfContexts"] + ".csproj"));
+            fullProjectPaths.Add("DataAccess", Path.Combine(projectsDirectories["DataAccess"], projectsNames["DataAccess"] + ".csproj"));
+            fullProjectPaths.Add("Dto", Path.Combine(projectsDirectories["Dto"], projectsNames["Dto"] + ".csproj"));
+            fullProjectPaths.Add("tmp", Path.Combine(projectsDirectories["tmp"], projectsNames["tmp"] + ".csproj"));
         }
         catch(Exception e)
         {
@@ -217,25 +238,32 @@ internal class BackendTemplateCreator
 
     public (string, bool) CreateProjects()
     {
-        (string m, bool success) result = CreateProject(projectsPaths["EfContexts"], $"{backendName}.Infrastructure.EfContexts", "classlib");
-        result = CreateProject(projectsPaths["DataAccess"], $"{backendName}.Infrastructure.DataAccess", "classlib");
-        result = CreateProject(projectsPaths["Dto"], $"{backendName}.Application.Dto", "classlib");
-        result = CreateProject(projectsPaths["tmp"], $"{backendName}.temprunner", "console");
+        (string m, bool success) result = CreateProject(projectsDirectories["EfContexts"], projectsNames["EfContexts"], "classlib");
+        result = CreateProject(projectsDirectories["DataAccess"], projectsNames["DataAccess"], "classlib");
+        result = CreateProject(projectsDirectories["Dto"], projectsNames["Dto"], "classlib");
+        result = CreateProject(projectsDirectories["tmp"], projectsNames["tmp"], "console");
         return ("All projects created successfully", true);
+    }
+
+    public (string, bool) AddReferences()
+    {
+        string command = $"add {fullProjectPaths["EfContexts"]} reference {fullProjectPaths["Dto"]}";
+        (string m, bool success) = ExecuteDotnet(command);
+        return (m, success);
     }
 
     public (string, bool) BuildProjects()
     {
-        (string m, bool success) result = BuildProject(projectsPaths["EfContexts"]);
-        result = BuildProject(projectsPaths["DataAccess"]);
-        result = BuildProject(projectsPaths["Dto"]);
-        result = BuildProject(projectsPaths["tmp"]);
+        (string m, bool success) result = BuildProject(projectsDirectories["EfContexts"]);
+        result = BuildProject(projectsDirectories["DataAccess"]);
+        result = BuildProject(projectsDirectories["Dto"]);
+        result = BuildProject(projectsDirectories["tmp"]);
         return ("All projects successfully builded", true);
     }
 
     public (string, bool) InstallDesignNuget()
     {
-        string command = $"add {projectsPaths["tmp"]}\\{backendName}.temprunner.csproj package Microsoft.EntityFrameworkCore.Design";
+        string command = $"add {projectsDirectories["tmp"]}\\{backendName}.temprunner.csproj package Microsoft.EntityFrameworkCore.Design";
         (string m, bool success) = ExecuteDotnet(command);
         return (m, success);
     }
@@ -243,7 +271,7 @@ internal class BackendTemplateCreator
     public (string, bool) InstallSqlServerNuget()
     {
         // {projectsPaths["EfContexts"]}\\{backendName}.Infrastructure.EfContexts.csproj
-        string command = $"add {projectsPaths["tmp"]}\\{backendName}.temprunner.csproj package Microsoft.EntityFrameworkCore.SqlServer";
+        string command = $"add {projectsDirectories["tmp"]}\\{backendName}.temprunner.csproj package Microsoft.EntityFrameworkCore.SqlServer";
         (string m, bool success) = ExecuteDotnet(command);
         return (m, success);
     }
@@ -253,10 +281,10 @@ internal class BackendTemplateCreator
         string command = $"ef dbcontext scaffold \"{connectionString}\" Microsoft.EntityFrameworkCore.SqlServer " +
             "-v " +
             $"-c {backendName}Context " +
-            $"--context-dir {projectsPaths["EfContexts"]} " +
-            $"-o {projectsPaths["Dto"]} " +
-            $"-p {projectsPaths["tmp"]} " +
-            $"-s {projectsPaths["tmp"]}\\{backendName}.temprunner.csproj ";
+            $"--context-dir {projectsDirectories["EfContexts"]} " +
+            $"-o {projectsDirectories["Dto"]} " +
+            $"-p {projectsDirectories["tmp"]} " +
+            $"-s {projectsDirectories["tmp"]}\\{backendName}.temprunner.csproj ";
         (string m, bool success) = ExecuteDotnet(command);
 
         return (m, success);
