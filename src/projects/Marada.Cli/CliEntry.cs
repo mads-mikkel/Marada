@@ -110,12 +110,12 @@ partial class CliEntry
         result = backendTemplateCreator.CreateProjects();
         OutputResult(result);
 
-        Display($"Adding project references...", startNewLine: true);
-        result = backendTemplateCreator.AddReferences();
+        Display($"Adding project to solution...", startNewLine: true);
+        result = backendTemplateCreator.AddProjectsToSolution();
         OutputResult(result);
 
-        Display($"Building projects in {rootPath}\\src... ", startNewLine: true);
-        result = backendTemplateCreator.BuildProjects();
+        Display($"Adding project references...", startNewLine: true);
+        result = backendTemplateCreator.AddReferences();
         OutputResult(result);
 
         Display($"Installing EF NuGets...", startNewLine: true);
@@ -128,6 +128,10 @@ partial class CliEntry
         Display($"Running EF...", startNewLine: true);
         result = backendTemplateCreator.RunEf(c);
         OutputResult(result);
+
+        //Display($"Building projects in {rootPath}\\src... ", startNewLine: true);
+        //result = backendTemplateCreator.BuildProjects();
+        //OutputResult(result);
     }
 
     private static void OutputResult((string m, bool success) result)
@@ -244,12 +248,30 @@ internal class BackendTemplateCreator
         result = CreateProject(projectsDirectories["tmp"], projectsNames["tmp"], "console");
         return ("All projects created successfully", true);
     }
+    
+    internal (string m, bool succes) AddProjectsToSolution()
+    {
+        string projectsToAdd = $"{fullProjectNamesRelativeFromSrc["Dto"]} " +
+            $"{fullProjectNamesRelativeFromSrc["EfContexts"]} " +
+            $"{fullProjectNamesRelativeFromSrc["DataAccess"]}";
+        string command = $"sln {backendName}.sln add {projectsToAdd}";
+        (string m, bool success) result = ExecuteDotnet(command);        
+
+        return ("All references added", true);
+    }
 
     public (string, bool) AddReferences()
     {
         string command = $"add {fullProjectPaths["EfContexts"]} reference {fullProjectPaths["Dto"]}";
-        (string m, bool success) = ExecuteDotnet(command);
-        return (m, success);
+        (string m, bool success) result = ExecuteDotnet(command);
+
+        command = $"add {fullProjectPaths["DataAccess"]} reference {fullProjectPaths["Dto"]}";
+        result = ExecuteDotnet(command);
+        
+        command = $"add {fullProjectPaths["DataAccess"]} reference {fullProjectPaths["EfContexts"]}";
+        result = ExecuteDotnet(command);
+
+        return ("All references added", true);
     }
 
     public (string, bool) BuildProjects()

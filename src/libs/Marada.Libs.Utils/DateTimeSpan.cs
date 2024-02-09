@@ -25,6 +25,16 @@
         public static bool EndIsAfterStart(DateTime start, DateTime end)
             => end > start;
 
+        public static bool Overlaps(DateTimeSpan first, DateTimeSpan second)
+        {
+            if(first.End == second.Start ^ second.End == first.start)
+            {
+                return false;
+            }
+            bool areOverlapping = first.End >= second.Start && second.End >= first.Start;
+            return areOverlapping;
+        }
+
         public static implicit operator TimeSpan(DateTimeSpan dateTimeSpan) => dateTimeSpan.duration;
         public static implicit operator (DateTime start, DateTime end)(DateTimeSpan dateTimeSpan) => (dateTimeSpan.start, dateTimeSpan.end);
     }
