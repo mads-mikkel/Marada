@@ -9,11 +9,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Marada.Cli", "projects\Mara
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{7BE28B45-25BF-4847-9194-D22094CC7837}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marada.Libs.Utils", "libs\Marada.Libs.Utils\Marada.Libs.Utils.csproj", "{6EDE1847-93AF-4110-9C6A-1D99ED4684B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Marada.Libs.Utils", "libs\Marada.Libs.Utils\Marada.Libs.Utils.csproj", "{6EDE1847-93AF-4110-9C6A-1D99ED4684B9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{9079CD66-60E9-4283-AA74-09C12C1E65D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marada.Libs.Tests.UtilTests", "libs\tests\Marada.Libs.Tests.UtilTests\Marada.Libs.Tests.UtilTests.csproj", "{80DF951D-D9EA-4E5C-916B-AE12F4DE7ABA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Marada.Libs.Tests.UtilTests", "libs\tests\Marada.Libs.Tests.UtilTests\Marada.Libs.Tests.UtilTests.csproj", "{80DF951D-D9EA-4E5C-916B-AE12F4DE7ABA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marada.Libs.DataAccess", "libs\Marada.Libs.DataAccess\Marada.Libs.DataAccess.csproj", "{0A040637-F507-462A-AF76-062F83A854FC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{80DF951D-D9EA-4E5C-916B-AE12F4DE7ABA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{80DF951D-D9EA-4E5C-916B-AE12F4DE7ABA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{80DF951D-D9EA-4E5C-916B-AE12F4DE7ABA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A040637-F507-462A-AF76-062F83A854FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A040637-F507-462A-AF76-062F83A854FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A040637-F507-462A-AF76-062F83A854FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A040637-F507-462A-AF76-062F83A854FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,6 +48,7 @@ Global
 		{6EDE1847-93AF-4110-9C6A-1D99ED4684B9} = {7BE28B45-25BF-4847-9194-D22094CC7837}
 		{9079CD66-60E9-4283-AA74-09C12C1E65D2} = {7BE28B45-25BF-4847-9194-D22094CC7837}
 		{80DF951D-D9EA-4E5C-916B-AE12F4DE7ABA} = {9079CD66-60E9-4283-AA74-09C12C1E65D2}
+		{0A040637-F507-462A-AF76-062F83A854FC} = {7BE28B45-25BF-4847-9194-D22094CC7837}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FA80FAA8-B433-4DEC-8D66-7B3732202B29}
