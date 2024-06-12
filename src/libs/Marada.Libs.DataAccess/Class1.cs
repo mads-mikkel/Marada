@@ -51,7 +51,6 @@ namespace Marada.Libs.DataAccess
         public IEnumerable<T> GetAll()
         {
             ThrowOnCannotConnect();
-
             return dbSet.ToList();
         }
 
